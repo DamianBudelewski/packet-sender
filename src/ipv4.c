@@ -2,7 +2,7 @@
 
 
 void c_ip(unsigned char *sendbuf, struct ifreq if_ip,int tx_len){
-   	char input_char[32];
+   	char input_char[32] = "0";
 	int input_int = 0;
 	struct iphdr *iph = (struct iphdr *) (sendbuf + sizeof(struct ether_header));
 
@@ -32,8 +32,6 @@ void c_ip(unsigned char *sendbuf, struct ifreq if_ip,int tx_len){
 	else iph->frag_off = 0;
 
 
-
-
 	/* Identification */
     printf("Identification: ");
 	scanf("%d",&input_int);
@@ -57,7 +55,7 @@ void c_ip(unsigned char *sendbuf, struct ifreq if_ip,int tx_len){
 	/* Destination IP address */
     printf("Destination IP address: ");
     scanf("%s",&input_char);
-	if (input_char!="0"){
+	if (input_char != "0"){
 		iph->daddr = inet_addr(input_char);
 	}
 	else iph->daddr = inet_addr("127.0.0.1");

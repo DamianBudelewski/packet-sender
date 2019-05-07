@@ -122,7 +122,7 @@ int main(int argc, char *argv[]){
 
 	/* Create IPv4 header */
 	struct iphdr *iph = (struct iphdr *) (sendbuf + sizeof(struct ether_header));
-	dl_handle=dlopen("./src/ipv4.so",RTLD_LAZY);
+	dl_handle=dlopen("/home/damian/Workspace/eclipse-workspace/c-socket-programming/sendFrames/src/ipv4.so",RTLD_LAZY);
 		if (!dl_handle) {
 		        printf("Error: Can't open library");
 		        exit(EXIT_FAILURE);
@@ -137,7 +137,7 @@ int main(int argc, char *argv[]){
 
 	/* Create TCP header */
  	struct tcphdr *tcph = (struct tcphdr *) (sendbuf + sizeof(struct ether_header) + sizeof(struct iphdr));
-	dl_handle=dlopen("./src/tcp.so",RTLD_LAZY);
+	dl_handle=dlopen("/home/damian/Workspace/eclipse-workspace/c-socket-programming/sendFrames/src/tcp.so",RTLD_LAZY);
 	if (!dl_handle) {
 	        printf("Error: Can't open library");
 			exit(EXIT_FAILURE);

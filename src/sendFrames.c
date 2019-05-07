@@ -24,7 +24,7 @@
 #include "tcp.h"
 #include <dlfcn.h>
 #define DEFAULT_IF	"lo"
-#define BUF_SIZ		1024
+#define BUF_SIZ		65536	
 unsigned short csum(unsigned short *buf, int nwords);
 
 
@@ -32,6 +32,16 @@ unsigned short csum(unsigned short *buf, int nwords);
 struct Frames{
     unsigned char data[BUF_SIZ];
     struct Frames* next;
+};
+
+
+/* 96 bit (12 bytes) pseudo header needed for tcp header checksum calculation */
+struct pseudo_header{
+	u_int32_t source_address;
+	u_int32_t dest_address;
+	u_int8_t placeholder;
+	u_int8_t protocol;
+	u_int16_t tcp_length;
 };
 
 
@@ -56,6 +66,7 @@ void append(struct Frames** head_ref,unsigned char new_data[])
 
 int main(int argc, char *argv[]){
 	struct Frames* head = (struct Frames*) malloc(sizeof(struct Frames)); 	// Empty frame list
+	struct pseudo_header psh;
 	int i = 0;
 	char MY_DEST_MAC[6] = {0x00,0x11,0x22,0x33,0x44,0x55};
 	int sockfd;				// raw socket
@@ -63,7 +74,8 @@ int main(int argc, char *argv[]){
 	struct ifreq if_mac;	// interface mac address
 	struct ifreq if_ip;		// interface ip address
 	void *dl_handle;		// variable to handle dynamic alocation of libraries
-	int tx_len = 0;  		// Send N bytes of BUF on socket FD to peer at address ADDR (
+	int tx_len = 0;  		// Send N bytes of BUF on socket FD to peer at address ADDR 
+	char *pseudogram;		// used for tcp checksum calculation
 	unsigned char sendbuf[BUF_SIZ];
 
 
@@ -124,8 +136,8 @@ int main(int argc, char *argv[]){
 	struct iphdr *iph = (struct iphdr *) (sendbuf + sizeof(struct ether_header));
 	dl_handle=dlopen("/home/damian/Workspace/eclipse-workspace/c-socket-programming/sendFrames/src/ipv4.so",RTLD_LAZY);
 		if (!dl_handle) {
-		        printf("Error: Can't open library");
-		        exit(EXIT_FAILURE);
+				printf("Error: Can't open library");
+				exit(EXIT_FAILURE);
 		}
 	void (*c_ip)(unsigned char *sendbuf, struct ifreq if_ip, int tx_len);
 	c_ip=dlsym(dl_handle,"c_ip");
@@ -136,10 +148,10 @@ int main(int argc, char *argv[]){
 
 
 	/* Create TCP header */
- 	struct tcphdr *tcph = (struct tcphdr *) (sendbuf + sizeof(struct ether_header) + sizeof(struct iphdr));
+	struct tcphdr *tcph = (struct tcphdr *) (sendbuf + sizeof(struct ether_header) + sizeof(struct iphdr));
 	dl_handle=dlopen("/home/damian/Workspace/eclipse-workspace/c-socket-programming/sendFrames/src/tcp.so",RTLD_LAZY);
 	if (!dl_handle) {
-	        printf("Error: Can't open library");
+			printf("Error: Can't open library");
 			exit(EXIT_FAILURE);
 		}
 	void (*c_tcp)(unsigned char *sendbuf);
@@ -147,6 +159,20 @@ int main(int argc, char *argv[]){
 	c_tcp(sendbuf);
 	tx_len += sizeof(struct tcphdr);
 	dlclose(dl_handle);
+
+
+	/* TCP checksum calculation */  
+	// NOT WORKING !!!!
+	psh.source_address = inet_addr(inet_ntoa(((struct sockaddr_in *)&if_ip.ifr_addr)->sin_addr));
+	psh.dest_address = iph->daddr;
+	psh.placeholder = 0;
+	psh.protocol = IPPROTO_TCP;
+	psh.tcp_length = htons(sizeof(struct tcphdr));
+	int psize = sizeof(struct pseudo_header) + sizeof(struct tcphdr);
+	pseudogram = malloc(psize);
+	memcpy(pseudogram , (char*)&psh , sizeof (struct pseudo_header));
+	memcpy(pseudogram + sizeof(struct pseudo_header) , tcph , sizeof(struct tcphdr));
+	tcph->check = csum((unsigned short*) pseudogram , psize);
 
 
 	/* Add frame to list */
@@ -170,7 +196,6 @@ int main(int argc, char *argv[]){
 }
 
 
-
 unsigned short csum(unsigned short *buf, int nwords){
     unsigned long sum;
     for(sum=0; nwords>0; nwords--)
@@ -179,6 +204,5 @@ unsigned short csum(unsigned short *buf, int nwords){
     sum += (sum >> 16);
     return (unsigned short)(~sum);
 }
-
 
 

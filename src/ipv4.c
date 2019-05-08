@@ -1,72 +1,53 @@
 #include "ipv4.h"
+#include <getopt.h>
 
 
-void c_ip(unsigned char *sendbuf, struct ifreq if_ip,int tx_len){
+void do_opt(unsigned char *sendbuf, struct ifreq if_ip, int tx_len, char * const argv[], int argc){
+
+	struct iphdr *iph = (struct iphdr *) (sendbuf + sizeof(struct ether_header));
+	optind = 1;				// variable is the index value of the next argument that should be handled by the getopt()
+	int opt;				// variable will handle getopt func
    	char input_char[32] = "0";
 	int input_int = 0;
-	struct iphdr *iph = (struct iphdr *) (sendbuf + sizeof(struct ether_header));
 
 
-   	/* IP Header */
-	printf("---------------- IPv4 -----------------\n");
-	printf("0 for default\n");
+	/* Predefinition */
+	iph->frag_off = 0;
+	iph->tos = 0;
+	iph->id = htonl(54321); 
+	iph->ttl = 128;
+	iph->daddr = inet_addr("127.0.0.1");
 
 
-	/* Type of service */
-	printf("Type of service: ");
-	scanf("%d",&input_int);
-	if (input_int!=0){
-		iph->tos = input_int;
-		input_int = 0;
-	}
-	else iph->tos = 0;
-
-
-	/* Flags */
-	printf("Don't fragment (0,1): ");
-	scanf("%d",&input_int);
-	if (input_int!=0){
-		iph->frag_off = 0b01000000;
-		input_int = 0;
-	}
-	else iph->frag_off = 0;
-
-
-	/* Identification */
-    printf("Identification: ");
-	scanf("%d",&input_int);
-	if (input_int!=0){
-		iph->id = htons(input_int);
-		input_int = 0;
-	}
-	else iph->id = htonl(54321); 
-
-
-	/* Time to live */
-	printf("Time to live: ");
-	scanf("%d",&input_int);
-	if (input_int!=0){
-		iph->ttl = input_int;
-		input_int = 0;
-	}
-	else iph->ttl = 128;
-
-
-	/* Destination IP address */
-    printf("Destination IP address: ");
-    scanf("%s",&input_char);
-	if (input_char != "0"){
-		iph->daddr = inet_addr(input_char);
-	}
-	else iph->daddr = inet_addr("127.0.0.1");
-
-
-	/* Those parametrs can only be filled that way */
+	/* Fields which need to be filled like this, if not packet will be corrupt */
 	iph->tot_len = htons(sizeof(struct iphdr) + sizeof (struct tcphdr));
 	iph->version = 4; // IPv4
 	iph->check = 0; // Set to 0 before calculating checksum
 	iph->ihl = 5;
 	iph->protocol = 6; // TCP
 	iph->saddr = inet_addr(inet_ntoa(((struct sockaddr_in *)&if_ip.ifr_addr)->sin_addr));
-}
 
+
+	/* Get option */
+	while((opt = getopt(argc, argv, "a:b:d:e:f:g:i:j:n:p:q:r:s:t:u:w:x:y:z:h")) != -1){
+		switch(opt){
+			case 'd':
+				iph->daddr = inet_addr(optarg);
+				break;
+			case 'f':
+				iph->frag_off = 0b01000000;
+				break;
+			case 'o':
+				iph->tos = (u_int8_t)strtoul(optarg, (char **)NULL, 0);
+				break;
+			case 't':
+				iph->ttl = (u_int8_t)strtoul(optarg, (char **)NULL,0);
+				break;
+			case 'i':
+				iph->id = htons((u_int16_t)strtoul(optarg, (char **)NULL, 0));
+				break;
+			case '?':
+				break;
+		}
+	}
+}

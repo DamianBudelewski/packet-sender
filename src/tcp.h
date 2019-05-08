@@ -14,6 +14,7 @@
 #include <netinet/tcp.h>
 
 
-void c_tcp(unsigned char *sendbuff);
+void do_opt(unsigned char *sendbuf, struct ifreq if_ip, int tx_len, char * const argv[], int argc);
+
 
 #endif /* TCP_H_ */

@@ -14,6 +14,6 @@
 #include <netinet/tcp.h>
 
 
-void c_ip(unsigned char *sendbuf, struct ifreq if_ip,int tx_len);
+void do_opt(unsigned char *sendbuf, struct ifreq if_ip, int tx_len, char * const argv[], int argc);
 
 #endif /* IPV4_H_ */

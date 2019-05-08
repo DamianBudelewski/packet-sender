@@ -35,18 +35,18 @@
 #include <unistd.h>
 #include <getopt.h>
 #define DEFAULT_IF	"lo"	// Picked loopback as default interface because it is universal
-#define BUF_SIZ	65536		// Max size of buffer and possible packet to sent
-extern int optind;			// variable is the index value of the next argument that should be handled by the getopt()
+#define BUF_SIZ	65536	// Max size of buffer and possible packet to sent
+extern int optind;	// variable is the index value of the next argument that should be handled by the getopt()
 
 
-/*	Linked list to store frames */
+/* Linked list to store frames */
 struct Frames{
     unsigned char data[BUF_SIZ];
     struct Frames* next;
 };
 
 
-/*	96 bit (12 bytes) pseudo header needed for tcp header checksum calculation */
+/* 96 bit (12 bytes) pseudo header needed for tcp header checksum calculation */
 struct pseudo_header
 {
 	u_int32_t source_address;
@@ -154,8 +154,6 @@ int main(int argc, char *argv[]){
 		eh->ether_dhost[i] = MY_DEST_MAC[i];
 		socket_address.sll_addr[i] = MY_DEST_MAC[i];
 	}
-
-
 	eh->ether_type = htons(ETH_P_IP);	// Ethertype field
 	socket_address.sll_ifindex = if_idx.ifr_ifindex;	// Index of the network device
 	socket_address.sll_halen = ETH_ALEN;	// Address length
@@ -249,7 +247,7 @@ void append(struct Frames** head_ref,unsigned char new_data[])
 }
 
 
-/*Generic checksum calculation function*/
+/* Generic checksum calculation function*/
 unsigned short csumtcp(unsigned short *ptr,int nbytes) 
 {
 	register long sum;

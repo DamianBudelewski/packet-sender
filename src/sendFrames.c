@@ -1,15 +1,4 @@
 /*
- * Aplikacja pozwalająca na stworzenie i wysłanie dowolnego pakietu IP
- * Obsługiwany stos protokołów: IPv4 + TCP
- * Program ma zezwalać na wybranie interfejsu sieciowego
- * Biblioteki poszczególnych protokołów ładowane dynamiczne
- * Pola nie podane przez użytkownika zostanę wypełnione zgodnie z RFC
- * Stworzone pakiety zostaną załadowane do listy wiązanej
- * Pakiety z listy zostaną wysłane do wskazanego interfejsu
- */
-
-
-/*
  * Application for sending raw tcp->ip packet
  * Program let you choose interface and all field of tcp and ip packet
  * Libraries are dynamic alocated
@@ -35,8 +24,8 @@
 #include <unistd.h>
 #include <getopt.h>
 #define DEFAULT_IF	"lo"	// Picked loopback as default interface because it is universal
-#define BUF_SIZ	65536	// Max size of buffer and possible packet to sent
-extern int optind;	// variable is the index value of the next argument that should be handled by the getopt()
+#define BUF_SIZ	65536		// Max size of buffer and possible packet to sent
+extern int optind;		// variable is the index value of the next argument that should be handled by the getopt()
 
 
 /* Linked list to store frames */
@@ -66,20 +55,20 @@ void help();
 
 int main(int argc, char *argv[]){
 
-	int i = 0;	// temporary helper variable 
-	int times = 1;	// How many times packet should be sent, default = 1;
-	int opt;	// variable for getopt function
-	int sockfd;	// raw socket
+	int i = 0;		// temporary helper variable 
+	int times = 1;		// How many times packet should be sent, default = 1;
+	int opt;		// variable for getopt function
+	int sockfd;		// raw socket
 	struct ifreq if_idx;	// interface index to send on
 	struct ifreq if_mac;	// interface mac address
 	struct ifreq if_ip;	// interface ip address
 	void *dl_handle;	// variable to handle dynamic alocation of libraries
-	int tx_len = 0;	// Send N bytes of BUF on socket FD to peer at address ADDR 
+	int tx_len = 0;		// Send N bytes of BUF on socket FD to peer at address ADDR 
 
 
 	struct Frames* head = (struct Frames*) malloc(sizeof(struct Frames));	// Empty frame list
-	char MY_DEST_MAC[6] = {0x00,0x11,0x22,0x33,0x44,0x55};	// Destination MAC 
-	unsigned char sendbuf[BUF_SIZ];	// Buffer that will store all information about packets
+	char MY_DEST_MAC[6] = {0x00,0x11,0x22,0x33,0x44,0x55};			// Destination MAC 
+	unsigned char sendbuf[BUF_SIZ];						// Buffer that will store all information about packets
 
 
 	/* Variables used to calculate TCP checksum */
@@ -154,10 +143,10 @@ int main(int argc, char *argv[]){
 		eh->ether_dhost[i] = MY_DEST_MAC[i];
 		socket_address.sll_addr[i] = MY_DEST_MAC[i];
 	}
-	eh->ether_type = htons(ETH_P_IP);	// Ethertype field
+	eh->ether_type = htons(ETH_P_IP);			// Ethertype field
 	socket_address.sll_ifindex = if_idx.ifr_ifindex;	// Index of the network device
-	socket_address.sll_halen = ETH_ALEN;	// Address length
-	tx_len += sizeof(struct ether_header);	// Added size of ethernet header to length of buffer
+	socket_address.sll_halen = ETH_ALEN;			// Address length
+	tx_len += sizeof(struct ether_header);			// Added size of ethernet header to length of buffer
 
 
 	/* Create IPv4 header */

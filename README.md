@@ -1,8 +1,9 @@
 ### Packet-sender
 C program to send raw packets (eth->ipv4->tcp)
 
-Type "./sendFrames -h" for possible parametrs
-If you don't choose parametrs then program will send raw TCP packet from lo interface to lo address.
+Type "./sendFrames -h" for possible parameters.
+
+If you don't provide any parametrs then program will send raw TCP packet from lo interface to lo address.
 
 ### Parametrs:
 *	a - acknowledgment number
